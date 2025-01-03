@@ -1,4 +1,5 @@
 import pygame, mysql.connector, time, sys
+from button import Button
 
 #db connection
 mydb = mysql.connector.connect(
@@ -15,11 +16,15 @@ SCREEN_HEIGHT = 600
 
 screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
 
-login_bg = pygame.image.load('login_bg.jpg') #login screen bg
+login_bg = pygame.image.load('assets/login_bg.jpg') #login screen bg
+name_back = pygame.image.load('assets/NameBack.png')
 
 run = True
 logged_in = False
 clock = pygame.time.Clock()
+
+def get_font(size): # Returns Press-Start-2P in the desired size
+    return pygame.font.Font("assets/BungeeLayers-Outline.otf", size)
 
 def welcome_screen():
     frame_rate = 15 #Fade frame rate control
@@ -60,26 +65,25 @@ def welcome_screen():
         pygame.display.flip()
         clock.tick(30)
 
-def login_menu():
+    user_auth_menu()
+
+def user_auth_menu():
     while True:
         screen.blit(login_bg, (0, 0))
 
         mouse_pos = pygame.mouse.get_pos()
 
-        title_text = get_font(100).render('Game Name', True, 'chartreuse4')
-        title_rect = MENU_TEXT.get_rect(center=(640, 100))
+        register_button = Button(base_image=pygame.image.load("assets/buttons/RegisterRectUp.png"), pos=(SCREEN_WIDTH//2, 250), 
+                            hovering_image=pygame.image.load("assets/buttons/RegisterRectDown.png"))
+        login_button = Button(base_image=pygame.image.load("assets/buttons/LoginRectUp.png"), pos=(SCREEN_WIDTH//2, 340), 
+                            hovering_image=pygame.image.load("assets/buttons/LoginRectDown.png"))
+        quit_button = Button(base_image=pygame.image.load("assets/buttons/QuitRectUp.png"), pos=(SCREEN_WIDTH//2, 430), 
+                            hovering_image=pygame.image.load("assets/buttons/QuitRectDown.png"))
 
-        register_button = Button(image=pygame.image.load("assets/Play Rect.png"), pos=(640, 250), 
-                            text_input="PLAY", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
-        login_button = Button(image=pygame.image.load("assets/Options Rect.png"), pos=(640, 400), 
-                            text_input="OPTIONS", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
-        quit_button = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(640, 550), 
-                            text_input="QUIT", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
-
-        screen.blit(title_text, title_rect)
+        screen.blit(name_back, (200,40))
 
         for button in [register_button, login_button, quit_button]:
-            button.changeColor(mouse_pos)
+            button.changeImage(mouse_pos)
             button.update(screen)
         
         for event in pygame.event.get():
@@ -87,17 +91,23 @@ def login_menu():
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                #if register_button.checkForInput(mouse_pos):
-                    
-                #if login_button.checkForInput(mouse_pos):
-                    
+                if register_button.checkForInput(mouse_pos):
+                    registration_menu()
+                if login_button.checkForInput(mouse_pos):
+                    login_menu()
                 if quit_button.checkForInput(mouse_pos):
                     pygame.quit()
                     sys.exit()
 
         pygame.display.update()
 
+def registration_menu():
+    time.sleep(5)
+    pygame.quit()
+
+def login_menu():
+    time.sleep(0.1)
+    pygame.quit
+
 welcome_screen()
 
-pygame.quit()
-sys.exit()
