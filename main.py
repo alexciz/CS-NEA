@@ -27,43 +27,33 @@ def get_font(size): # Returns Press-Start-2P in the desired size
     return pygame.font.Font("assets/BungeeLayers-Outline.otf", size)
 
 def welcome_screen():
-    frame_rate = 15 #Fade frame rate control
-    font_size = 128 #Initial font size
+    frame_rate = 10 #Fade frame rate control
+    font_size = 128 #Font size
     alpha_rate = 4 #Rate of opacity increase
-    x=1 #Exponential constant
     font = pygame.font.Font(None, font_size)
     screen.fill((30,30,30))
-    orig_surf = font.render('Game Name', True, 'chartreuse4')
+    orig_surf = font.render('Terra Tales', True, 'chartreuse4')
     txt_surf = orig_surf.copy() #This surface is used to adjust the alpha of the txt_surf
     txt_surf_rect = txt_surf.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2))
     alpha_surf = pygame.Surface(txt_surf.get_size(), pygame.SRCALPHA)
     alpha = 0  #The current alpha value of the surface
 
-    while font_size<5800:
+    while alpha <255 :
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return
             
-        if alpha < 255:
-            #Reduce alpha each frame, but make sure it doesn't get below 0
-            alpha = min(alpha+alpha_rate, 255)
-            txt_surf = orig_surf.copy()  #Fill alpha_surf with this color to set its alpha value
-            alpha_surf.fill((255, 255, 255, alpha))
-            txt_surf.blit(alpha_surf, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
-            alpha_rate += 1
-            time.sleep(1/frame_rate)
-        else:
-            font_size += 16^x
-            font = pygame.font.Font(None, font_size)
-            txt_surf = font.render('Game Name', True, 'chartreuse4')
-            txt_surf_rect = txt_surf.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2))
-            x+=1
-            
+        #Reduce alpha each frame, but make sure it doesn't get below 0
+        alpha = min(alpha+alpha_rate, 255)
+        txt_surf = orig_surf.copy()  #Fill alpha_surf with this color to set its alpha value
+        alpha_surf.fill((255, 255, 255, alpha))
+        txt_surf.blit(alpha_surf, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+        alpha_rate += 1
+        time.sleep(1/frame_rate)
 
         screen.fill((30,30,30))
         screen.blit(txt_surf, txt_surf_rect)
         pygame.display.flip()
-        clock.tick(30)
 
     user_auth_menu()
 
@@ -102,8 +92,19 @@ def user_auth_menu():
         pygame.display.update()
 
 def registration_menu():
-    time.sleep(5)
-    pygame.quit()
+    while True:
+        screen.blit(login_bg, (0, 0))
+        screen.blit(name_back, (200,40))
+
+
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            
+  
+        pygame.display.update()
 
 def login_menu():
     time.sleep(0.1)
