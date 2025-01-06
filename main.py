@@ -1,5 +1,6 @@
 import pygame, mysql.connector, time, sys
 from button import Button
+from input_box import InputBox
 
 #db connection
 mydb = mysql.connector.connect(
@@ -16,15 +17,13 @@ SCREEN_HEIGHT = 600
 
 screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
 
-login_bg = pygame.image.load('assets/login_bg.jpg') #login screen bg
-name_back = pygame.image.load('assets/NameBack.png')
+login_bg = pygame.image.load('assets/login_bg.png') #login screen bg
+title = pygame.image.load('assets/TitleRect.png')
 
 run = True
 logged_in = False
 clock = pygame.time.Clock()
 
-def get_font(size): # Returns Press-Start-2P in the desired size
-    return pygame.font.Font("assets/BungeeLayers-Outline.otf", size)
 
 def welcome_screen():
     frame_rate = 10 #Fade frame rate control
@@ -60,17 +59,18 @@ def welcome_screen():
 def user_auth_menu():
     while True:
         screen.blit(login_bg, (0, 0))
+        screen.blit(title, title.get_rect(center=(SCREEN_WIDTH//2, 110)))
 
         mouse_pos = pygame.mouse.get_pos()
 
         register_button = Button(base_image=pygame.image.load("assets/buttons/RegisterRectUp.png"), pos=(SCREEN_WIDTH//2, 250), 
                             hovering_image=pygame.image.load("assets/buttons/RegisterRectDown.png"))
+        
         login_button = Button(base_image=pygame.image.load("assets/buttons/LoginRectUp.png"), pos=(SCREEN_WIDTH//2, 340), 
                             hovering_image=pygame.image.load("assets/buttons/LoginRectDown.png"))
+        
         quit_button = Button(base_image=pygame.image.load("assets/buttons/QuitRectUp.png"), pos=(SCREEN_WIDTH//2, 430), 
                             hovering_image=pygame.image.load("assets/buttons/QuitRectDown.png"))
-
-        screen.blit(name_back, (200,40))
 
         for button in [register_button, login_button, quit_button]:
             button.changeImage(mouse_pos)
@@ -94,14 +94,19 @@ def user_auth_menu():
 def registration_menu():
     while True:
         screen.blit(login_bg, (0, 0))
-        screen.blit(name_back, (200,40))
+        screen.blit(title, title.get_rect(center=(SCREEN_WIDTH//2, 110)))
 
+        username_box = InputBox("assets/InpuBox.png", pos=(SCREEN_WIDTH//2 - 80, 250), text='Username')
+
+        input_boxes = [username_box]
 
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            for box in input_boxes:
+                box.handle_event(event)
             
   
         pygame.display.update()
