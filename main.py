@@ -96,7 +96,7 @@ def registration_menu():
         screen.blit(login_bg, (0, 0))
         screen.blit(title, title.get_rect(center=(SCREEN_WIDTH//2, 110)))
 
-        username_box = InputBox("assets/InpuBox.png", pos=(SCREEN_WIDTH//2 - 80, 250), text='Username')
+        username_box = InputBox(image = pygame.image.load("assets/InputBox.png"), pos=(SCREEN_WIDTH//2 - 80, 250), text='Username')
 
         input_boxes = [username_box]
 
@@ -107,8 +107,13 @@ def registration_menu():
                 sys.exit()
             for box in input_boxes:
                 box.handle_event(event)
+        
+        for box in input_boxes:
+            box.update()
             
-  
+        for box in input_boxes:
+            box.draw(screen)
+            
         pygame.display.update()
 
 def login_menu():
