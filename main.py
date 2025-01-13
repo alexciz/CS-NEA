@@ -4,7 +4,7 @@ from input_box import InputBox
 
 #db connection
 mydb = mysql.connector.connect(
-  host="sus.gleeze.com",
+  host="sus.gleeze.com",   
   user="client",
   password="password",
   database="user_info"
@@ -28,7 +28,8 @@ clock = pygame.time.Clock()
 def welcome_screen():
     frame_rate = 10 #Fade frame rate control
     font_size = 128 #Font size
-    alpha_rate = 4 #Rate of opacity increase
+
+    alpha_rate = 5 #Rate of opacity increase
     font = pygame.font.Font(None, font_size)
     screen.fill((30,30,30))
     orig_surf = font.render('Terra Tales', True, 'chartreuse4')
@@ -92,11 +93,13 @@ def user_auth_menu():
         pygame.display.update()
 
 def registration_menu():
+    username_box = InputBox(image = pygame.image.load("assets/InputBox.png"), pos=(SCREEN_WIDTH//2, 250), placeholder='Username', screen_width=SCREEN_WIDTH, screen_height=SCREEN_HEIGHT)
+
     while True:
         screen.blit(login_bg, (0, 0))
         screen.blit(title, title.get_rect(center=(SCREEN_WIDTH//2, 110)))
 
-        username_box = InputBox(image = pygame.image.load("assets/InputBox.png"), pos=(SCREEN_WIDTH//2 - 80, 250), text='Username')
+    
 
         input_boxes = [username_box]
 
@@ -105,14 +108,13 @@ def registration_menu():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            for box in input_boxes:
-                box.handle_event(event)
+            username_box.handle_event(screen, event)
         
-        for box in input_boxes:
-            box.update()
+       # for box in input_boxes:
+        #    box.update()
             
-        for box in input_boxes:
-            box.draw(screen)
+        
+        username_box.draw(screen)
             
         pygame.display.update()
 
