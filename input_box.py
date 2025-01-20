@@ -2,21 +2,26 @@ import pygame, time
 
 class InputBox:
     
-    def __init__(self, image, pos, placeholder = '', screen_width = 0, screen_height= 0):
+    def __init__(self, image, pos, placeholder = '', screen_width = 0, screen_height= 0, hidden=False):
         self.image = image
-        self.color = pygame.Color('azure2')
+        self.color = pygame.Color('azure3')
         self.text = ''
         self.x_pos = pos[0]
         self.y_pos = pos[1]
+        self.hidden = hidden
+        self.dot_text = ''
         self.screen_width = screen_width
         self.screen_height = screen_height
-        self.txt_surface = pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(self.text, True, self.color)
+        if self.hidden == False:
+            self.txt_surface = pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(self.text, True, self.color)
+        else:
+            self.txt_surface = pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(self.dot_text, True, self.color)
         self.rect = self.image.get_rect(center=(self.x_pos, self.y_pos))
         self.active = False
         self.placeholder_surface = pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(placeholder, True, self.color)
         self.cursor = pygame.Rect(self.rect.topright, (3, self.rect.height-55))        
 
-    def handle_event(self, screen, event):
+    def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             # If the user clicked on the input_box rect
             if not self.rect.collidepoint(event.pos):
@@ -29,15 +34,16 @@ class InputBox:
         if event.type == pygame.KEYDOWN and self.active:
             if event.key == pygame.K_BACKSPACE:
                 self.text = self.text[:-1]
+                self.dot_text = self.dot_text[:-1]
             else:
-                if self.txt_surface.get_width() > self.rect.x - 35:
-                    limit_text = pygame.font.Font("assets/ChangaOne-Regular.ttf", 16).render("Character Limit Reached", True, color='red')
-                    screen.blit(limit_text,(100,100))
-                    print("print")
-                else:
+                if self.txt_surface.get_width() < self.rect.x - 35:
                     self.text += event.unicode
+                    self.dot_text += '·'
              # Re-render the text
+        if self.hidden == False:
             self.txt_surface = pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(self.text, True, self.color)
+        else:
+            self.txt_surface = pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(self.dot_text, True, self.color)
 
     def draw(self, screen):
         # Blit the rect.
@@ -52,4 +58,6 @@ class InputBox:
                 text_rect = self.txt_surface.get_rect(topleft = (self.rect.x + 12, self.rect.y + 26))
                 self.cursor.midleft = text_rect.midright
                 pygame.draw.rect(screen, self.color, self.cursor)
-
+    
+    def return_text(self):
+        return self.text

@@ -9,6 +9,7 @@ mydb = mysql.connector.connect(
   password="password",
   database="user_info"
 )
+mycursor = mydb.cursor()
 
 pygame.init()
 
@@ -58,22 +59,22 @@ def welcome_screen():
     user_auth_menu()
 
 def user_auth_menu():
+    register_button = Button(base_image=pygame.image.load("assets/buttons/RegisterRectUp.png"), pos=(SCREEN_WIDTH//2, 230), 
+                        hovering_image=pygame.image.load("assets/buttons/RegisterRectDown.png"))
+        
+    login_button = Button(base_image=pygame.image.load("assets/buttons/LoginRectUp.png"), pos=(SCREEN_WIDTH//2, 330), 
+                        hovering_image=pygame.image.load("assets/buttons/LoginRectDown.png"))
+        
+    quit_button = Button(base_image=pygame.image.load("assets/buttons/QuitRectUp.png"), pos=(SCREEN_WIDTH//2, 430), 
+                        hovering_image=pygame.image.load("assets/buttons/QuitRectDown.png"))
     while True:
         screen.blit(login_bg, (0, 0))
-        screen.blit(title, title.get_rect(center=(SCREEN_WIDTH//2, 110)))
+        screen.blit(title, title.get_rect(center=(SCREEN_WIDTH//2, 80)))
 
         mouse_pos = pygame.mouse.get_pos()
+        buttons = [register_button, login_button, quit_button]
 
-        register_button = Button(base_image=pygame.image.load("assets/buttons/RegisterRectUp.png"), pos=(SCREEN_WIDTH//2, 250), 
-                            hovering_image=pygame.image.load("assets/buttons/RegisterRectDown.png"))
-        
-        login_button = Button(base_image=pygame.image.load("assets/buttons/LoginRectUp.png"), pos=(SCREEN_WIDTH//2, 340), 
-                            hovering_image=pygame.image.load("assets/buttons/LoginRectDown.png"))
-        
-        quit_button = Button(base_image=pygame.image.load("assets/buttons/QuitRectUp.png"), pos=(SCREEN_WIDTH//2, 430), 
-                            hovering_image=pygame.image.load("assets/buttons/QuitRectDown.png"))
-
-        for button in [register_button, login_button, quit_button]:
+        for button in buttons:
             button.changeImage(mouse_pos)
             button.update(screen)
         
@@ -93,28 +94,43 @@ def user_auth_menu():
         pygame.display.update()
 
 def registration_menu():
-    username_box = InputBox(image = pygame.image.load("assets/InputBox.png"), pos=(SCREEN_WIDTH//2, 250), placeholder='Username', screen_width=SCREEN_WIDTH, screen_height=SCREEN_HEIGHT)
+    username_box = InputBox(image = pygame.image.load("assets/InputBox.png"), pos=(SCREEN_WIDTH//2, 210), placeholder='Username', screen_width=SCREEN_WIDTH, screen_height=SCREEN_HEIGHT)
+    password_box = InputBox(image = pygame.image.load("assets/InputBox.png"), pos=(SCREEN_WIDTH//2, 300), placeholder='Password', screen_width=SCREEN_WIDTH, screen_height=SCREEN_HEIGHT, hidden=True)
+    repeat_password_box = InputBox(image = pygame.image.load("assets/InputBox.png"), pos=(SCREEN_WIDTH//2, 390), placeholder='Repeat Password', screen_width=SCREEN_WIDTH, screen_height=SCREEN_HEIGHT, hidden=True)
+
+    proceed_button = Button(base_image=pygame.image.load("assets/buttons/ProceedRectUp.png"), pos=(SCREEN_WIDTH//2, 500), 
+                        hovering_image=pygame.image.load("assets/buttons/ProceedRectDown.png"))
+    home_button = Button(base_image=pygame.image.load("assets/buttons/HomeRectUp.png"), pos=(70, 70), 
+                        hovering_image=pygame.image.load("assets/buttons/HomeRectDown.png"))
+    
 
     while True:
         screen.blit(login_bg, (0, 0))
-        screen.blit(title, title.get_rect(center=(SCREEN_WIDTH//2, 110)))
+        screen.blit(title, title.get_rect(center=(SCREEN_WIDTH//2, 80)))
 
-    
+        mouse_pos = pygame.mouse.get_pos()
+        input_boxes = [username_box, password_box, repeat_password_box]
+        buttons = [proceed_button, home_button]
+        
+        for button in buttons:
+            button.changeImage(mouse_pos)
+            button.update(screen)
 
-        input_boxes = [username_box]
-
+        for box in input_boxes:
+            box.draw(screen)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            username_box.handle_event(screen, event)
-        
-       # for box in input_boxes:
-        #    box.update()
-            
-        
-        username_box.draw(screen)
+            for box in input_boxes:
+                box.handle_event(event)
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if home_button.checkForInput(mouse_pos):
+                    user_auth_menu()
+                if proceed_button.checkForInput(mouse_pos):
+                    if username_box.return_text == mycursor.execute("SELECT username FROM users").fetchall():
+                        break
             
         pygame.display.update()
 
