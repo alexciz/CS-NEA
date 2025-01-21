@@ -110,7 +110,7 @@ def registration_menu():
 
         mouse_pos = pygame.mouse.get_pos()
         input_boxes = [username_box, password_box, repeat_password_box]
-        buttons = [proceed_button, home_button]
+        buttons = [home_button, proceed_button]
         
         for button in buttons:
             button.changeImage(mouse_pos)
@@ -130,6 +130,7 @@ def registration_menu():
                     user_auth_menu()
                 if proceed_button.checkForInput(mouse_pos):
                     if username_box.return_text == mycursor.execute("SELECT username FROM users").fetchall():
+                        print("dsvbuf")
                         break
             
         pygame.display.update()

@@ -30,7 +30,7 @@ class InputBox:
             else:
                 self.active = True
             # Change the current color of the input box
-            self.color = pygame.Color('white') if self.active else pygame.Color('azure3')
+            self.color = pygame.Color('white') if self.active or self.text != '' else pygame.Color('azure3')
         if event.type == pygame.KEYDOWN and self.active:
             if event.key == pygame.K_BACKSPACE:
                 self.text = self.text[:-1]
