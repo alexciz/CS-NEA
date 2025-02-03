@@ -60,4 +60,5 @@ class InputBox:
                 pygame.draw.rect(screen, self.color, self.cursor)
     
     def return_text(self):
-        return self.text
+        input = self.text
+        return input

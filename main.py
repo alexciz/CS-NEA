@@ -94,6 +94,12 @@ def user_auth_menu():
         pygame.display.update()
 
 def registration_menu():
+    invalid_alpha = 0       # 0 = fully transparent, 255 = fully visible
+    fade_speed = 0.3          # How fast the message fades out
+    hold_duration = 300      # Time (in frames) to stay fully visible before fading
+    hold_counter = 0
+    invalid_txt = None
+
     username_box = InputBox(image = pygame.image.load("assets/InputBox.png"), pos=(SCREEN_WIDTH//2, 210), placeholder='Username', screen_width=SCREEN_WIDTH, screen_height=SCREEN_HEIGHT)
     password_box = InputBox(image = pygame.image.load("assets/InputBox.png"), pos=(SCREEN_WIDTH//2, 300), placeholder='Password', screen_width=SCREEN_WIDTH, screen_height=SCREEN_HEIGHT, hidden=True)
     repeat_password_box = InputBox(image = pygame.image.load("assets/InputBox.png"), pos=(SCREEN_WIDTH//2, 390), placeholder='Repeat Password', screen_width=SCREEN_WIDTH, screen_height=SCREEN_HEIGHT, hidden=True)
@@ -102,7 +108,7 @@ def registration_menu():
                         hovering_image=pygame.image.load("assets/buttons/ProceedRectDown.png"))
     home_button = Button(base_image=pygame.image.load("assets/buttons/HomeRectUp.png"), pos=(70, 70), 
                         hovering_image=pygame.image.load("assets/buttons/HomeRectDown.png"))
-    
+
 
     while True:
         screen.blit(login_bg, (0, 0))
@@ -119,20 +125,53 @@ def registration_menu():
         for box in input_boxes:
             box.draw(screen)
 
+        if invalid_txt is not None:
+            if hold_counter < hold_duration:
+                # Keep message fully visible during "hold" phase
+                hold_counter += 1
+                invalid_alpha = 255
+            else:
+                # Fade out after hold duration
+                invalid_alpha = max(invalid_alpha - fade_speed, 0)
+
+            # Draw the message with current alpha
+            invalid_txt.set_alpha(invalid_alpha)
+            screen.blit(invalid_txt, invalid_txt.get_rect(center=(SCREEN_WIDTH//2, 565)))
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+
             for box in input_boxes:
-                box.handle_event(event)
+                box.handle_event(event) 
+
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if home_button.checkForInput(mouse_pos):
                     user_auth_menu()
+
                 if proceed_button.checkForInput(mouse_pos):
-                    if username_box.return_text == mycursor.execute("SELECT username FROM users").fetchall():
-                        print("dsvbuf")
-                        break
-            
+                    invalid_txt = None
+                    mycursor.execute("SELECT username FROM users")  #Selects usernames to prevent duplicates
+                    usernames = mycursor.fetchall()
+
+                    for username in usernames:
+                        if username_box.return_text() == username[0]:
+                            invalid_txt = pygame.font.Font("assets/ChangaOne-Regular.ttf", 24).render("Username taken!", True, "red")
+                            invalid_alpha = 255
+                            hold_counter = 0 
+                    
+                    if password_box.return_text() != repeat_password_box.return_text():
+                            invalid_txt = pygame.font.Font("assets/ChangaOne-Regular.ttf", 24).render("Passwords do not match!", True, "red")
+                            invalid_alpha = 255
+                            hold_counter = 0 
+
+                    if invalid_txt == None:
+                        sql = "INSERT INTO users (username, password) VALUES (%s, %s)"
+                        val = (username_box.return_text(), password_box.return_text())
+                        mycursor.execute(sql, val)
+                        login_menu()
+
         pygame.display.update()
 
 def login_menu():
