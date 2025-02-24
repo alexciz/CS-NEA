@@ -26,6 +26,9 @@ run = True
 logged_in = False
 clock = pygame.time.Clock()
 
+logged_in_user = ''
+level = 0
+high_score = 0
 
 def welcome_screen():
     frame_rate = 10 #Fade frame rate control
@@ -203,7 +206,7 @@ def registration_menu():
                             hold_counter = 0 
 
                     if invalid_txt == None:
-                        sql = "INSERT INTO users (username, password) VALUES (%s, %s)"
+                        sql = "INSERT INTO users (username, password, level, high_score) VALUES (%s, %s, 1, 0)"
                         val = (username_box.return_text(), password_box.return_text())
                         mycursor.execute(sql, val)
                         user_auth_menu(True)
@@ -275,17 +278,36 @@ def login_menu():
                             invalid_txt = pygame.font.Font("assets/ChangaOne-Regular.ttf", 24).render("Username or password incorrect!", True, "red")
                             invalid_alpha = 255
                             hold_counter = 0 
-
+                            break
                     if invalid_txt == None:
+                        logged_in_user = username_box.return_text()
                         game_menu()
+
 
         pygame.display.update()
 
 
 def game_menu():
-    time.sleep(5)
-    pygame.quit()
-    sys.exit()
+    mycursor.execute ("SELECT level FROM users WHERE username = %s", (logged_in_user,))
+    level = mycursor.fetchall()
+    mycursor.execute("SELECT high_score FROM users WHERE username = %s", (logged_in_user,))
+    high_score = mycursor.fetchall()
 
-welcome_screen()
+    high_score_counter = pygame.transform.scale(pygame.image.load("assets/Counterbg.png"), (2*len(high_score)+100, 50))
+    level_counter = pygame.transform.scale(pygame.image.load("assets/Counterbg.png"), (2*len(level)+100, 50))
+
+    while True:
+        screen.blit(login_bg, (0, 0))
+        screen.blit(high_score_counter, (800,20))
+        screen.blit(level_counter, (20,20))
+         
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        pygame.display.update()
+
+user_auth_menu()
 
