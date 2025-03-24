@@ -320,7 +320,6 @@ def game_menu():
                         hovering_image2=pygame.image.load("assets/buttons/SoundOffRectDown.png"))
 
     while True:
-
         screen.blit(login_bg, (0, 0))
         screen.blit(pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(f'Level: {level[0]}', True, pygame.Color('white')), (30,27))
         screen.blit(pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(f'High Score: {high_score[0]}', True, pygame.Color('white')), (600,27))
@@ -354,7 +353,7 @@ def game_menu():
         pygame.display.update()
 
 def game():
-    print("game")
+    
 
 welcome_screen()
 
