@@ -5,15 +5,15 @@ from input_box import InputBox
 pygame.init()
 pygame.display.set_caption('Terra Tales')
 
-SCREEN_WIDTH = 800  #window res
-SCREEN_HEIGHT = 600
+SCREEN_WIDTH = 1088  #window res
+SCREEN_HEIGHT = 612
 
 screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
 
 login_bg = pygame.image.load('assets/login_bg.png') #login screen bg
+game_bg = pygame.image.load('assets/game_bg.png') #game bg
 title = pygame.image.load('assets/TitleRect.png')
 
-run = True
 clock = pygame.time.Clock()
 
 
@@ -322,7 +322,7 @@ def game_menu():
     while True:
         screen.blit(login_bg, (0, 0))
         screen.blit(pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(f'Level: {level[0]}', True, pygame.Color('white')), (30,27))
-        screen.blit(pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(f'High Score: {high_score[0]}', True, pygame.Color('white')), (600,27))
+        screen.blit(pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(f'High Score: {high_score[0]}', True, pygame.Color('white')), (SCREEN_WIDTH-200,27))
 
         mouse_pos = pygame.mouse.get_pos() 
         buttons = [play_button, quit_button, sound_button]
@@ -353,7 +353,18 @@ def game_menu():
         pygame.display.update()
 
 def game():
-    
+    score = 0
+
+    while True:
+        screen.blit(game_bg, (0, 0))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+        
+        pygame.display.update()
+
 
 welcome_screen()
 

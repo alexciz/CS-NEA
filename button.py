@@ -6,10 +6,9 @@ class Button():
         self.y_pos = pos[1]
         self.rect = self.base_image1.get_rect(center=(self.x_pos, self.y_pos))
         self.toggle = toggle
-        if toggle:
-            self.base_image2 = base_image2
-            self.hovering_image2 = hovering_image2
-            self.state = 0
+        self.base_image2 = base_image2
+        self.hovering_image2 = hovering_image2
+        self.state = 0
         self.base_image = base_image1
         self.hovering_image = hovering_image1
         self.image = self.base_image
@@ -25,7 +24,7 @@ class Button():
                     self.state = 1
                 else:
                     self.base_image = self.base_image1
-                    self.hovering_image = self.base_image1
+                    self.hovering_image = self.hovering_image1
                     self.state = 0
             return True
         return False
