@@ -2,15 +2,6 @@ import pygame, mysql.connector, time, sys
 from button import Button
 from input_box import InputBox
 
-#db connection
-mydb = mysql.connector.connect(
-  host="sus.gleeze.com",   
-  user="client",
-  password="password",
-  database="user_info"
-)
-mycursor = mydb.cursor()
-
 pygame.init()
 pygame.display.set_caption('Terra Tales')
 
@@ -29,6 +20,19 @@ clock = pygame.time.Clock()
 logged_in_user = ''
 level = 0
 high_score = 0
+
+
+def db_connect():        #Database Connection
+    global mycursor
+    global mydb
+    mydb = mysql.connector.connect(
+    host="sus.gleeze.com",   
+    user="client",
+    password="password",
+    database="user_info"
+    )
+    mycursor = mydb.cursor()
+
 
 def welcome_screen():
     frame_rate = 10 #Fade frame rate control
@@ -61,6 +65,7 @@ def welcome_screen():
         pygame.display.flip()
 
     user_auth_menu()
+
 
 def user_auth_menu(registered=False):
     alpha = 0       # 0 = fully transparent, 255 = fully visible
@@ -122,6 +127,7 @@ def user_auth_menu(registered=False):
 
         pygame.display.update()
 
+
 def registration_menu():
     invalid_alpha = 0       # 0 = fully transparent, 255 = fully visible
     fade_speed = 0.3          # How fast the message fades out
@@ -181,8 +187,11 @@ def registration_menu():
 
                 if proceed_button.checkForInput(mouse_pos):
                     invalid_txt = None
+                    db_connect()
                     mycursor.execute("SELECT username FROM users")  #Selects usernames to prevent duplicates
                     usernames = mycursor.fetchall()
+                    mycursor.close()
+                    mydb.close()
 
                     if len(username_box.return_text()) < 1:
                             invalid_txt = pygame.font.Font("assets/ChangaOne-Regular.ttf", 24).render("No username entered!", True, "red")
@@ -206,12 +215,17 @@ def registration_menu():
                             hold_counter = 0 
 
                     if invalid_txt == None:
+                        db_connect()
                         sql = "INSERT INTO users (username, password, level, high_score) VALUES (%s, %s, 1, 0)"
                         val = (username_box.return_text(), password_box.return_text())
                         mycursor.execute(sql, val)
+                        mydb.commit()
+                        mycursor.close()
+                        mydb.close()
                         user_auth_menu(True)
 
         pygame.display.update()
+
 
 def login_menu():
     invalid_alpha = 0       # 0 = fully transparent, 255 = fully visible
@@ -270,8 +284,11 @@ def login_menu():
 
                 if proceed_button.checkForInput(mouse_pos):
                     invalid_txt = None
+                    db_connect()
                     mycursor.execute("SELECT * FROM users")  #Selects all user login data for validation
                     user_data = mycursor.fetchall()
+                    mycursor.close()
+                    mydb.close()
 
                     for user in user_data:
                         if username_box.return_text() != user[0] or password_box.return_text() != user[1]:
@@ -283,23 +300,29 @@ def login_menu():
                         logged_in_user = username_box.return_text()
                         game_menu()
 
-
         pygame.display.update()
 
 
 def game_menu():
+    db_connect()
     mycursor.execute ("SELECT level FROM users WHERE username = %s", (logged_in_user,))
     level = mycursor.fetchall()
     mycursor.execute("SELECT high_score FROM users WHERE username = %s", (logged_in_user,))
     high_score = mycursor.fetchall()
+    mycursor.close()
+    mydb.close()
 
-    high_score_counter = pygame.transform.scale(pygame.image.load("assets/Counterbg.png"), (2*len(high_score)+100, 50))
-    level_counter = pygame.transform.scale(pygame.image.load("assets/Counterbg.png"), (2*len(level)+100, 50))
+    high_score_counter = pygame.transform.scale(pygame.image.load("assets/Counterbg.png"), (len(high_score)+62, 50))
+    level_counter = pygame.transform.scale(pygame.image.load("assets/Counterbg.png"), (len(level)+47, 50))
 
     while True:
         screen.blit(login_bg, (0, 0))
-        screen.blit(high_score_counter, (800,20))
+        screen.blit(high_score_counter, (630,20))
         screen.blit(level_counter, (20,20))
+        print(level)
+        print(high_score)
+        screen.blit(pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(f'Level: {level}', True, pygame.Color('white')), (30,27))
+        screen.blit(pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(f'High Score: {high_score}', True, pygame.Color('white')), (640,27))
          
 
         for event in pygame.event.get():
@@ -309,5 +332,5 @@ def game_menu():
 
         pygame.display.update()
 
-user_auth_menu()
+welcome_screen()
 
