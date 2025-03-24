@@ -14,12 +14,7 @@ login_bg = pygame.image.load('assets/login_bg.png') #login screen bg
 title = pygame.image.load('assets/TitleRect.png')
 
 run = True
-logged_in = False
 clock = pygame.time.Clock()
-
-logged_in_user = ''
-level = 0
-high_score = 0
 
 
 def db_connect():        #Database Connection
@@ -74,14 +69,14 @@ def user_auth_menu(registered=False):
     hold_counter = 0
     success_txt = None
 
-    register_button = Button(base_image=pygame.image.load("assets/buttons/RegisterRectUp.png"), pos=(SCREEN_WIDTH//2, 230), 
-                        hovering_image=pygame.image.load("assets/buttons/RegisterRectDown.png"))
+    register_button = Button(base_image1=pygame.image.load("assets/buttons/RegisterRectUp.png"), pos=(SCREEN_WIDTH//2, 230), 
+                        hovering_image1=pygame.image.load("assets/buttons/RegisterRectDown.png"))
         
-    login_button = Button(base_image=pygame.image.load("assets/buttons/LoginRectUp.png"), pos=(SCREEN_WIDTH//2, 330), 
-                        hovering_image=pygame.image.load("assets/buttons/LoginRectDown.png"))
+    login_button = Button(base_image1=pygame.image.load("assets/buttons/LoginRectUp.png"), pos=(SCREEN_WIDTH//2, 330), 
+                        hovering_image1=pygame.image.load("assets/buttons/LoginRectDown.png"))
         
-    quit_button = Button(base_image=pygame.image.load("assets/buttons/QuitRectUp.png"), pos=(SCREEN_WIDTH//2, 430), 
-                        hovering_image=pygame.image.load("assets/buttons/QuitRectDown.png"))
+    quit_button = Button(base_image1=pygame.image.load("assets/buttons/QuitRectUp.png"), pos=(SCREEN_WIDTH//2, 430), 
+                        hovering_image1=pygame.image.load("assets/buttons/QuitRectDown.png"))
     
     if registered == True:
         success_txt = pygame.font.Font("assets/ChangaOne-Regular.ttf", 24).render("Successfully registered!", True, "darkgreen")
@@ -139,10 +134,10 @@ def registration_menu():
     password_box = InputBox(image = pygame.image.load("assets/InputBox.png"), pos=(SCREEN_WIDTH//2, 300), placeholder='Password', screen_width=SCREEN_WIDTH, screen_height=SCREEN_HEIGHT, hidden=True)
     repeat_password_box = InputBox(image = pygame.image.load("assets/InputBox.png"), pos=(SCREEN_WIDTH//2, 390), placeholder='Repeat Password', screen_width=SCREEN_WIDTH, screen_height=SCREEN_HEIGHT, hidden=True)
 
-    proceed_button = Button(base_image=pygame.image.load("assets/buttons/ProceedRectUp.png"), pos=(SCREEN_WIDTH//2, 500), 
-                        hovering_image=pygame.image.load("assets/buttons/ProceedRectDown.png"))
-    home_button = Button(base_image=pygame.image.load("assets/buttons/HomeRectUp.png"), pos=(70, 70), 
-                        hovering_image=pygame.image.load("assets/buttons/HomeRectDown.png"))
+    proceed_button = Button(base_image1=pygame.image.load("assets/buttons/ProceedRectUp.png"), pos=(SCREEN_WIDTH//2, 500), 
+                        hovering_image1=pygame.image.load("assets/buttons/ProceedRectDown.png"))
+    home_button = Button(base_image1=pygame.image.load("assets/buttons/HomeRectUp.png"), pos=(70, 70), 
+                        hovering_image1=pygame.image.load("assets/buttons/HomeRectDown.png"))
 
 
     while True:
@@ -233,14 +228,15 @@ def login_menu():
     hold_duration = 300      # Time (in frames) to stay fully visible before fading
     hold_counter = 0
     invalid_txt = None
+    global logged_in_user
 
     username_box = InputBox(image = pygame.image.load("assets/InputBox.png"), pos=(SCREEN_WIDTH//2, 210), placeholder='Username', screen_width=SCREEN_WIDTH, screen_height=SCREEN_HEIGHT)
     password_box = InputBox(image = pygame.image.load("assets/InputBox.png"), pos=(SCREEN_WIDTH//2, 300), placeholder='Password', screen_width=SCREEN_WIDTH, screen_height=SCREEN_HEIGHT, hidden=True)
 
-    proceed_button = Button(base_image=pygame.image.load("assets/buttons/ProceedRectUp.png"), pos=(SCREEN_WIDTH//2, 410), 
-                        hovering_image=pygame.image.load("assets/buttons/ProceedRectDown.png"))
-    home_button = Button(base_image=pygame.image.load("assets/buttons/HomeRectUp.png"), pos=(70, 70), 
-                        hovering_image=pygame.image.load("assets/buttons/HomeRectDown.png"))
+    proceed_button = Button(base_image1=pygame.image.load("assets/buttons/ProceedRectUp.png"), pos=(SCREEN_WIDTH//2, 410), 
+                        hovering_image1=pygame.image.load("assets/buttons/ProceedRectDown.png"))
+    home_button = Button(base_image1=pygame.image.load("assets/buttons/HomeRectUp.png"), pos=(70, 70), 
+                        hovering_image1=pygame.image.load("assets/buttons/HomeRectDown.png"))
     
     while True:
         screen.blit(login_bg, (0, 0))
@@ -304,33 +300,61 @@ def login_menu():
 
 
 def game_menu():
+    global sound
+    sound = True
     db_connect()
     mycursor.execute ("SELECT level FROM users WHERE username = %s", (logged_in_user,))
-    level = mycursor.fetchall()
+    level = mycursor.fetchone()
     mycursor.execute("SELECT high_score FROM users WHERE username = %s", (logged_in_user,))
-    high_score = mycursor.fetchall()
+    high_score = mycursor.fetchone()
     mycursor.close()
     mydb.close()
 
-    high_score_counter = pygame.transform.scale(pygame.image.load("assets/Counterbg.png"), (len(high_score)+62, 50))
-    level_counter = pygame.transform.scale(pygame.image.load("assets/Counterbg.png"), (len(level)+47, 50))
+    play_button = Button(base_image1=pygame.image.load("assets/buttons/PlayRectUp.png"), pos=(SCREEN_WIDTH//2, 250), 
+                        hovering_image1=pygame.image.load("assets/buttons/PlayRectDown.png"))
+    quit_button = Button(base_image1=pygame.image.load("assets/buttons/QuitRectUp.png"), pos=(SCREEN_WIDTH//2, 350), 
+                        hovering_image1=pygame.image.load("assets/buttons/QuitRectDown.png"))
+    sound_button = Button(base_image1=pygame.image.load("assets/buttons/SoundOnRectUp.png"), pos=(SCREEN_WIDTH//2, 450), 
+                        hovering_image1=pygame.image.load("assets/buttons/SoundOnRectDown.png"), toggle=True,
+                        base_image2=pygame.image.load("assets/buttons/SoundOffRectUp.png"),
+                        hovering_image2=pygame.image.load("assets/buttons/SoundOffRectDown.png"))
 
     while True:
+
         screen.blit(login_bg, (0, 0))
-        screen.blit(high_score_counter, (630,20))
-        screen.blit(level_counter, (20,20))
-        print(level)
-        print(high_score)
-        screen.blit(pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(f'Level: {level}', True, pygame.Color('white')), (30,27))
-        screen.blit(pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(f'High Score: {high_score}', True, pygame.Color('white')), (640,27))
-         
+        screen.blit(pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(f'Level: {level[0]}', True, pygame.Color('white')), (30,27))
+        screen.blit(pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(f'High Score: {high_score[0]}', True, pygame.Color('white')), (600,27))
+
+        mouse_pos = pygame.mouse.get_pos() 
+        buttons = [play_button, quit_button, sound_button]
+
+        for button in buttons:
+            button.changeImage(mouse_pos)
+            button.update(screen)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if play_button.checkForInput(mouse_pos):
+                    game()
+                
+                if quit_button.checkForInput(mouse_pos):
+                    pygame.quit()
+                    sys.exit()
+                
+                if sound_button.checkForInput(mouse_pos):
+                    if sound:
+                        sound = False
+                    else:
+                        sound = True
 
         pygame.display.update()
+
+def game():
+    print("game")
 
 welcome_screen()
 
