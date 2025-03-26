@@ -1,5 +1,5 @@
 import pygame, mysql.connector, time, sys
-from classes import *
+from ui_classes import *
 
 pygame.init()
 pygame.display.set_caption('Terra Tales')
@@ -356,13 +356,30 @@ def game():
     start_time = pygame.time.get_ticks() #Fetches clock time when game starts for score calculations
     past_time = 0
     score = 0
+    first = 1
 
-    health_bar = IndicatorBar(880, 70, 200, 25, 100)
-    ecology_bar = IndicatorBar(880, 30, 200, 25, 100)
+    health_bar = IndicatorBar(SCREEN_WIDTH-208, 30, 200, 25, 100)
+    ecology_bar = IndicatorBar(SCREEN_WIDTH-208, 70, 200, 25, 100)
+
+    left_button = Button(base_image1=pygame.image.load("assets/buttons/LeftRectUp.png"), pos=(135, 350), 
+                        hovering_image1=pygame.image.load("assets/buttons/LeftRectDown.png"))
+    right_button = Button(base_image1=pygame.image.load("assets/buttons/RightRectUp.png"), pos=(SCREEN_WIDTH-130, 350), 
+                        hovering_image1=pygame.image.load("assets/buttons/RightRectDown.png"))
+    buttons = [left_button, right_button]
 
     while True:
         screen.blit(game_bg, (0, 0))
         screen.blit(pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(f'Score: {score}', True, pygame.Color('white')), (30,27))
+        screen.blit(pygame.image.load("assets/heart.png"), (SCREEN_WIDTH-243, 30))
+        screen.blit(pygame.image.load("assets/tree.png"), (SCREEN_WIDTH-243, 70))
+        
+        mouse_pos = pygame.mouse.get_pos() 
+
+
+        for button in buttons:
+            button.changeImage(mouse_pos)
+            button.update(screen)
+
         if pygame.time.get_ticks() - start_time >= 2500 + past_time:
             past_time += 2500
             score += 1
@@ -375,6 +392,14 @@ def game():
                 pygame.quit()
                 sys.exit()
         
+        if first == 1:
+            screen.blit(pygame.image.load("assets/sprite/laying.png"), (370,300))
+            pygame.display.update()
+            time.sleep(2000)
+            first += 1
+        elif first == 2:
+            screen.blit(pygame.image.load("assets/sprite/standing.png"), (320,350))
+
         pygame.display.update()
 
 
