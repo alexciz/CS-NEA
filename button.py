@@ -1,5 +1,5 @@
 class Button():
-    def __init__(self, base_image1, pos, hovering_image1, toggle = False, base_image2=None, hovering_image2=None):
+    def __init__(self, base_image1, pos, hovering_image1, toggle=False, base_image2=None, hovering_image2=None):
         self.base_image1 = base_image1
         self.hovering_image1 = hovering_image1
         self.x_pos = pos[0]

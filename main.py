@@ -1,6 +1,5 @@
 import pygame, mysql.connector, time, sys
-from button import Button
-from input_box import InputBox
+from classes import *
 
 pygame.init()
 pygame.display.set_caption('Terra Tales')
@@ -34,6 +33,7 @@ def welcome_screen():
     font_size = 128 #Font size
 
     alpha_rate = 5 #Rate of opacity increase
+    sigma_rate = 0 #Special veriable for darius
     font = pygame.font.Font(None, font_size)
     screen.fill((30,30,30))
     orig_surf = font.render('Terra Tales', True, 'chartreuse4')
@@ -281,21 +281,21 @@ def login_menu():
                 if proceed_button.checkForInput(mouse_pos):
                     invalid_txt = None
                     db_connect()
-                    mycursor.execute("SELECT * FROM users")  #Selects all user login data for validation
+                    mycursor.execute("SELECT username, password FROM users")  #Selects all user login data for validation
                     user_data = mycursor.fetchall()
                     mycursor.close()
                     mydb.close()
 
                     for user in user_data:
-                        if username_box.return_text() != user[0] or password_box.return_text() != user[1]:
+                        print(user)
+                        if username_box.return_text() == user[0] or password_box.return_text() == user[1]:
+                            logged_in_user = username_box.return_text()
+                            game_menu()
+                            break
+                        else:
                             invalid_txt = pygame.font.Font("assets/ChangaOne-Regular.ttf", 24).render("Username or password incorrect!", True, "red")
                             invalid_alpha = 255
                             hold_counter = 0 
-                            break
-                    if invalid_txt == None:
-                        logged_in_user = username_box.return_text()
-                        game_menu()
-
         pygame.display.update()
 
 
@@ -321,8 +321,8 @@ def game_menu():
 
     while True:
         screen.blit(login_bg, (0, 0))
-        screen.blit(pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(f'Level: {level[0]}', True, pygame.Color('white')), (30,27))
-        screen.blit(pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(f'High Score: {high_score[0]}', True, pygame.Color('white')), (SCREEN_WIDTH-200,27))
+        screen.blit(pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(f'Level: {level[0]}', True, pygame.Color('white')), (SCREEN_WIDTH-140,27))
+        screen.blit(pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(f'High Score: {high_score[0]}', True, pygame.Color('white')), (30,27))
 
         mouse_pos = pygame.mouse.get_pos() 
         buttons = [play_button, quit_button, sound_button]
@@ -353,10 +353,22 @@ def game_menu():
         pygame.display.update()
 
 def game():
+    start_time = pygame.time.get_ticks() #Fetches clock time when game starts for score calculations
+    past_time = 0
     score = 0
+
+    health_bar = IndicatorBar(880, 70, 200, 25, 100)
+    ecology_bar = IndicatorBar(880, 30, 200, 25, 100)
 
     while True:
         screen.blit(game_bg, (0, 0))
+        screen.blit(pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(f'Score: {score}', True, pygame.Color('white')), (30,27))
+        if pygame.time.get_ticks() - start_time >= 2500 + past_time:
+            past_time += 2500
+            score += 1
+    
+        health_bar.draw(screen)
+        ecology_bar.draw(screen)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
