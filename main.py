@@ -356,7 +356,7 @@ def game():
     start_time = pygame.time.get_ticks() #Fetches clock time when game starts for score calculations
     past_time = 0
     score = 0
-    first = 1
+    sprite_state = 1  # 1 for laying, 2 for standing
 
     health_bar = IndicatorBar(SCREEN_WIDTH-208, 30, 200, 25, 100)
     ecology_bar = IndicatorBar(SCREEN_WIDTH-208, 70, 200, 25, 100)
@@ -375,11 +375,6 @@ def game():
         
         mouse_pos = pygame.mouse.get_pos() 
 
-
-        for button in buttons:
-            button.changeImage(mouse_pos)
-            button.update(screen)
-
         if pygame.time.get_ticks() - start_time >= 2500 + past_time:
             past_time += 2500
             score += 1
@@ -387,21 +382,25 @@ def game():
         health_bar.draw(screen)
         ecology_bar.draw(screen)
 
+        # Handle laying to standing animation
+        if sprite_state == 1 and pygame.time.get_ticks() - start_time >= 2000:
+            sprite_state = 2
+            sprite_x = 320  # Standing position
+            sprite_y = 350  # Standing position
+
+        # Draw the appropriate sprite
+        if sprite_state == 1:
+            screen.blit(pygame.image.load("assets/sprite/laying.png"), (370, 300))
+        elif sprite_state == 2:
+            screen.blit(pygame.image.load("assets/sprite/standing.png"), (320, 273))
+
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-        
-        if first == 1:
-            screen.blit(pygame.image.load("assets/sprite/laying.png"), (370,300))
-            pygame.display.update()
-            time.sleep(2000)
-            first += 1
-        elif first == 2:
-            screen.blit(pygame.image.load("assets/sprite/standing.png"), (320,350))
 
         pygame.display.update()
 
 
 welcome_screen()
-

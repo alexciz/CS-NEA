@@ -1,0 +1,15 @@
+1|It's a hot day. Should you turn on the AC?|Turn it on|10|-20|Use a fan instead|5|5|200|300
+1|Time to brush your teeth. What do you do?|Leave the water running|-5|-10|Turn off water while brushing|5|5|150|250
+1|You're hungry. What do you eat?|Order takeout|-5|-15|Cook at home|10|10|250|350
+1|You need to go somewhere nearby. How do you get there?|Drive the car|-10|-20|Walk or bike|15|15|300|400
+1|Your phone is low on battery. What do you do?|Leave it charging overnight|-5|-10|Unplug when fully charged|5|5|180|280
+2|You're shopping for groceries. What do you do?|Buy everything new|0|-15|Buy some items second-hand|5|10|220|320
+2|You need new clothes. What do you do?|Buy fast fashion|-5|-20|Buy sustainable clothing|10|15|280|380
+2|You're cleaning your room. What do you use?|Disposable wipes|-5|-15|Reusable cloth|5|10|240|340
+2|You're thirsty. What do you drink?|Buy bottled water|-5|-15|Use a reusable bottle|5|10|260|360
+2|You're packing lunch. What do you use?|Plastic bags|-5|-15|Reusable containers|5|10|200|300
+3|Your old phone is slow. What do you do?|Buy a new one|-10|-20|Repair the old one|10|15|300|400
+3|You're moving. What do you do with old furniture?|Throw it away|-10|-20|Donate or sell it|10|15|250|350
+3|Your computer needs upgrading. What do you do?|Buy a new one|-10|-20|Upgrade components|10|15|280|380
+3|Your old clothes don't fit. What do you do?|Throw them away|-5|-15|Donate or repurpose|5|10|220|320
+3|Your bike is broken. What do you do?|Buy a new one|-10|-20|Fix the old one|10|15|260|360
