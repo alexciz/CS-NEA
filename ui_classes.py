@@ -1,7 +1,6 @@
 import pygame, time
 
 class InputBox:
-    
     def __init__(self, image, pos, placeholder = '', screen_width=0, screen_height=0, hidden=False):
         self.image = image
         self.color = pygame.Color('azure3')

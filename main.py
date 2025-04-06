@@ -1,4 +1,4 @@
-import pygame, mysql.connector, time, sys
+import pygame, mysql.connector, time, sys, random
 from ui_classes import *
 
 pygame.init()
@@ -338,7 +338,7 @@ def game_menu():
             
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if play_button.checkForInput(mouse_pos):
-                    game()
+                    game(logged_in_user)
                 
                 if quit_button.checkForInput(mouse_pos):
                     pygame.quit()
@@ -352,11 +352,46 @@ def game_menu():
 
         pygame.display.update()
 
-def game():
+
+def game(user):
+    logged_in_user = "test"
     start_time = pygame.time.get_ticks() #Fetches clock time when game starts for score calculations
-    past_time = 0
     score = 0
     sprite_state = 1  # 1 for laying, 2 for standing
+    current_question = None
+    question_timer = 0
+    question_interval = 5000  # Show new question every 5 seconds
+    game_over = False
+
+    # Get player's level
+    db_connect()
+    mycursor.execute("SELECT level FROM users WHERE username = %s", (logged_in_user,))
+    player_level = mycursor.fetchone()[0]
+    mycursor.close()
+    mydb.close()
+
+    # Load questions for current level
+    questions = []
+    with open('questions.txt', 'r') as file:
+        for line in file:
+            level, statement, question, left_text, left_health, left_ecology, right_text, right_health, right_ecology = line.strip().split('|')
+            if int(level) == int(player_level):
+                questions.append({
+                    "statement": statement,
+                    "question": question,
+                    "options": {
+                        "left": {
+                            "text": left_text,
+                            "health": int(left_health),
+                            "ecology": int(left_ecology)
+                        },
+                        "right": {
+                            "text": right_text,
+                            "health": int(right_health),
+                            "ecology": int(right_ecology)
+                        }
+                    }
+                })
 
     health_bar = IndicatorBar(SCREEN_WIDTH-208, 30, 200, 25, 100)
     ecology_bar = IndicatorBar(SCREEN_WIDTH-208, 70, 200, 25, 100)
@@ -375,18 +410,87 @@ def game():
         
         mouse_pos = pygame.mouse.get_pos() 
 
-        if pygame.time.get_ticks() - start_time >= 2500 + past_time:
-            past_time += 2500
+        if pygame.time.get_ticks() - start_time - 2500*score >= 2500:
             score += 1
     
         health_bar.draw(screen)
         ecology_bar.draw(screen)
 
+        # Decrease health when ecology is 0
+        if ecology_bar.level <= 0:
+            health_bar.level = max(0, health_bar.level - 0.004)  # Decrease health by 1, but don't go below 0
+
+        # Check for game over condition
+        if health_bar.level <= 0 and not game_over:
+            game_over = True
+            # Create a semi-transparent black overlay
+            overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+            overlay.fill((0, 0, 0))
+            overlay.set_alpha(128)
+            screen.blit(overlay, (0, 0))
+            
+            # Create and display game over text
+            game_over_font = pygame.font.Font("assets/ChangaOne-Regular.ttf", 64)
+            game_over_text = game_over_font.render("GAME OVER", True, (255, 0, 0))
+            text_rect = game_over_text.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2))
+            screen.blit(game_over_text, text_rect)
+
+            # Check and update high score
+            db_connect()
+            mycursor.execute("SELECT high_score FROM users WHERE username = %s", (logged_in_user,))
+            current_high_score = mycursor.fetchone()[0]
+            
+            if score > current_high_score:
+                # Update high score in database
+                mycursor.execute("UPDATE users SET high_score = %s WHERE username = %s", (score, logged_in_user))
+                mydb.commit()
+                
+                # Display new high score message
+                high_score_font = pygame.font.Font("assets/ChangaOne-Regular.ttf", 32)
+                high_score_text = high_score_font.render(f"New High Score: {score}!", True, (255, 215, 0))
+                high_score_rect = high_score_text.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 50))
+                screen.blit(high_score_text, high_score_rect)
+                pygame.display.update()
+            
+            mycursor.close()
+            mydb.close()
+            
+            # Wait for 3 seconds before returning to game menu
+            pygame.time.wait(3000)
+            game_menu()
+            return
+
         # Handle laying to standing animation
         if sprite_state == 1 and pygame.time.get_ticks() - start_time >= 2000:
             sprite_state = 2
-            sprite_x = 320  # Standing position
-            sprite_y = 350  # Standing position
+            question_timer = pygame.time.get_ticks()  # Reset timer when sprite stands up
+
+        # Handle question timing - only start after standing up
+        current_time = pygame.time.get_ticks()
+        if sprite_state == 2 and current_time - question_timer >= question_interval and not current_question and questions:
+            # Randomly select a question
+            current_question = random.choice(questions) 
+            question_timer = current_time
+
+        # Draw question and options if active
+        if current_question:
+            # Draw question text
+            question_font = pygame.font.Font("assets/ChangaOne-Regular.ttf", 32)
+            statement_text = question_font.render(current_question["statement"], True, "black")
+            screen.blit(statement_text, statement_text.get_rect(center=(SCREEN_WIDTH//2, 70)))
+            question_text = question_font.render(current_question["question"], True, "black")
+            screen.blit(question_text, question_text.get_rect(center=(SCREEN_WIDTH//2, 100)))
+
+            # Draw option texts
+            left_text = question_font.render(current_question["options"]["left"]["text"], True, "black")
+            right_text = question_font.render(current_question["options"]["right"]["text"], True, "black")
+            screen.blit(left_text, left_text.get_rect(center=(135, 240)))
+            screen.blit(right_text, right_text.get_rect(center=(SCREEN_WIDTH-130, 240)))
+
+            # Show decision buttons
+            for button in buttons:
+                button.changeImage(mouse_pos)
+                button.update(screen)
 
         # Draw the appropriate sprite
         if sprite_state == 1:
@@ -394,13 +498,29 @@ def game():
         elif sprite_state == 2:
             screen.blit(pygame.image.load("assets/sprite/standing.png"), (320, 273))
 
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            
+            if event.type == pygame.MOUSEBUTTONDOWN and current_question:
+                if left_button.checkForInput(mouse_pos):
+                    # Handle left option
+                    health_bar.level += current_question["options"]["left"]["health"]
+                    ecology_bar.level += current_question["options"]["left"]["ecology"]
+                    current_question = None  # Clear current question
+                    questions.pop(0)  # Remove the used question
+                    question_timer = pygame.time.get_ticks()  # Reset timer for next question
+                elif right_button.checkForInput(mouse_pos):
+                    # Handle right option
+                    health_bar.level += current_question["options"]["right"]["health"]
+                    ecology_bar.level += current_question["options"]["right"]["ecology"]
+                    current_question = None  # Clear current question
+                    questions.pop(0)  # Remove the used question
+                    question_timer = pygame.time.get_ticks()  # Reset timer for next question
+
 
         pygame.display.update()
 
 
-welcome_screen()
+game()
