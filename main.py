@@ -287,7 +287,6 @@ def login_menu():
                     mydb.close()
 
                     for user in user_data:
-                        print(user)
                         if username_box.return_text() == user[0] or password_box.return_text() == user[1]:
                             logged_in_user = username_box.return_text()
                             game_menu()
@@ -438,7 +437,7 @@ def game(user):
             # Check and update high score
             db_connect()
             mycursor.execute("SELECT high_score FROM users WHERE username = %s", (logged_in_user,))
-            current_high_score = mycursor.fetchone()[0]
+            current_high_score = int(mycursor.fetchone()[0])
             
             if score > current_high_score:
                 # Update high score in database
@@ -523,4 +522,4 @@ def game(user):
         pygame.display.update()
 
 
-game()
+game("bob")
