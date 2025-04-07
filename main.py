@@ -1,5 +1,5 @@
-import pygame, mysql.connector, time, sys, random
-from ui_classes import *
+import pygame, mysql.connector, sys, random
+from classes import *
 
 pygame.init()
 pygame.display.set_caption('Terra Tales')
@@ -12,6 +12,9 @@ screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
 login_bg = pygame.image.load('assets/login_bg.png') #login screen bg
 game_bg = pygame.image.load('assets/game_bg.png') #game bg
 title = pygame.image.load('assets/TitleRect.png')
+
+#Level Progression Thresholds
+level_thresholds = [100, 200, 350, 550, 800, 1100, 1450, 1850, 2300, 2800]
 
 clock = pygame.time.Clock()
 
@@ -53,7 +56,7 @@ def welcome_screen():
         alpha_surf.fill((255, 255, 255, alpha))
         txt_surf.blit(alpha_surf, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
         alpha_rate += 1
-        time.sleep(1/frame_rate)
+        pygame.time.wait(1/frame_rate)
 
         screen.fill((30,30,30))
         screen.blit(txt_surf, txt_surf_rect)
@@ -352,7 +355,7 @@ def game_menu():
         pygame.display.update()
 
 
-def game(user):
+def game():
     logged_in_user = "test"
     start_time = pygame.time.get_ticks() #Fetches clock time when game starts for score calculations
     score = 0
@@ -401,7 +404,22 @@ def game(user):
                         hovering_image1=pygame.image.load("assets/buttons/RightRectDown.png"))
     buttons = [left_button, right_button]
 
+
+    walking_sprite_sheet_image = pygame.image.load("assets/sprite/walk.png").convert_alpha()
+    walking_sprite_sheet = SpriteSheet(walking_sprite_sheet_image)
+    
+    walking_frames = []
+    walking_steps = 10
+
+    for x in range(walking_steps):
+        walking_frames.append(walking_sprite_sheet.get_image(x, 128, 128, 1, (255, 255, 255)))
+
+    animation_cooldown = 500
+    frame = 0
+    last_animation_update = start_time
+
     while True:
+        current_time = pygame.time.get_ticks()
         screen.blit(game_bg, (0, 0))
         screen.blit(pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(f'Score: {score}', True, pygame.Color('white')), (30,27))
         screen.blit(pygame.image.load("assets/heart.png"), (SCREEN_WIDTH-243, 30))
@@ -409,7 +427,7 @@ def game(user):
         
         mouse_pos = pygame.mouse.get_pos() 
 
-        if pygame.time.get_ticks() - start_time - 2500*score >= 2500:
+        if current_time - start_time - 2500*score >= 2500:
             score += 1
     
         health_bar.draw(screen)
@@ -434,25 +452,38 @@ def game(user):
             text_rect = game_over_text.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2))
             screen.blit(game_over_text, text_rect)
 
-            # Check and update high score
+            # Check and update high score and total score
             db_connect()
-            mycursor.execute("SELECT high_score FROM users WHERE username = %s", (logged_in_user,))
-            current_high_score = int(mycursor.fetchone()[0])
+            mycursor.execute("SELECT high_score, total_score FROM users WHERE username = %s", (logged_in_user,))
+            high_score, total_score = mycursor.fetchone()
+            high_score = int(high_score)
+            total_score = int(total_score) if total_score is not None else 0
             
-            if score > current_high_score:
-                # Update high score in database
-                mycursor.execute("UPDATE users SET high_score = %s WHERE username = %s", (score, logged_in_user))
-                mydb.commit()
+            # Update total score
+            total_score = total_score + score
+            
+            if score > high_score:
+                # Update high score
+                high_score = score
                 
                 # Display new high score message
                 high_score_font = pygame.font.Font("assets/ChangaOne-Regular.ttf", 32)
                 high_score_text = high_score_font.render(f"New High Score: {score}!", True, (255, 215, 0))
                 high_score_rect = high_score_text.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2 - 50))
                 screen.blit(high_score_text, high_score_rect)
-                pygame.display.update()
             
+            if total_score >= level_thresholds[player_level-1] and player_level < 10:
+                # Update level
+                player_level += 1
+
+            #Update database
+            mycursor.execute("UPDATE users SET level = %s, high_score = %s, total_score = %s WHERE username = %s", (player_level, high_score, total_score, logged_in_user))
+            mydb.commit()
             mycursor.close()
             mydb.close()
+            
+            # Update the display
+            pygame.display.update()
             
             # Wait for 3 seconds before returning to game menu
             pygame.time.wait(3000)
@@ -460,12 +491,11 @@ def game(user):
             return
 
         # Handle laying to standing animation
-        if sprite_state == 1 and pygame.time.get_ticks() - start_time >= 2000:
+        if sprite_state == 1 and current_time - start_time >= 2000:
             sprite_state = 2
-            question_timer = pygame.time.get_ticks()  # Reset timer when sprite stands up
+            question_timer = current_time  # Reset timer when sprite stands up
 
         # Handle question timing - only start after standing up
-        current_time = pygame.time.get_ticks()
         if sprite_state == 2 and current_time - question_timer >= question_interval and not current_question and questions:
             # Randomly select a question
             current_question = random.choice(questions) 
@@ -509,17 +539,24 @@ def game(user):
                     ecology_bar.level += current_question["options"]["left"]["ecology"]
                     current_question = None  # Clear current question
                     questions.pop(0)  # Remove the used question
-                    question_timer = pygame.time.get_ticks()  # Reset timer for next question
+                    question_timer = current_time  # Reset timer for next question
                 elif right_button.checkForInput(mouse_pos):
                     # Handle right option
                     health_bar.level += current_question["options"]["right"]["health"]
                     ecology_bar.level += current_question["options"]["right"]["ecology"]
                     current_question = None  # Clear current question
                     questions.pop(0)  # Remove the used question
-                    question_timer = pygame.time.get_ticks()  # Reset timer for next question
+                    question_timer = current_time  # Reset timer for next question
 
+        if current_time - last_animation_update >= animation_cooldown:
+            frame += 1
+            last_animation_update = current_time
+            if frame >= walking_steps:
+                frame = 0
+                
+        screen.blit(walking_frames[frame], (370, 300))
 
         pygame.display.update()
 
 
-game("bob")
+game()
