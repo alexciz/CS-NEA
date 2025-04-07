@@ -359,11 +359,19 @@ def game():
     logged_in_user = "test"
     start_time = pygame.time.get_ticks() #Fetches clock time when game starts for score calculations
     score = 0
-    sprite_state = 1  # 1 for laying, 2 for standing
+    run_count = 0 #Holds the number of times the game loop has run for the first two runs
     current_question = None
     question_timer = 0
     question_interval = 5000  # Show new question every 5 seconds
     game_over = False
+    sprite_x = 320  # Default sprite position
+    sprite_y = 273  # Default sprite position
+    is_walking = False
+    target_x = sprite_x
+    target_y = sprite_y
+    walking_speed = 4  # Speed for horizontal movement
+    walking_direction = 1  # 1 for right, -1 for left
+    animation_cooldown = 100  # Animation frame timing
 
     # Get player's level
     db_connect()
@@ -376,7 +384,7 @@ def game():
     questions = []
     with open('questions.txt', 'r') as file:
         for line in file:
-            level, statement, question, left_text, left_health, left_ecology, right_text, right_health, right_ecology = line.strip().split('|')
+            level, statement, question, left_text, left_health, left_ecology, left_x, left_y, right_text, right_health, right_ecology, right_x, right_y = line.strip().split('|')
             if int(level) == int(player_level):
                 questions.append({
                     "statement": statement,
@@ -385,12 +393,16 @@ def game():
                         "left": {
                             "text": left_text,
                             "health": int(left_health),
-                            "ecology": int(left_ecology)
+                            "ecology": int(left_ecology),
+                            "x": int(left_x),
+                            "y": int(left_y)
                         },
                         "right": {
                             "text": right_text,
                             "health": int(right_health),
-                            "ecology": int(right_ecology)
+                            "ecology": int(right_ecology),
+                            "x": int(right_x),
+                            "y": int(right_y)
                         }
                     }
                 })
@@ -404,7 +416,6 @@ def game():
                         hovering_image1=pygame.image.load("assets/buttons/RightRectDown.png"))
     buttons = [left_button, right_button]
 
-
     walking_sprite_sheet_image = pygame.image.load("assets/sprite/walk.png").convert_alpha()
     walking_sprite_sheet = SpriteSheet(walking_sprite_sheet_image)
     
@@ -412,9 +423,8 @@ def game():
     walking_steps = 10
 
     for x in range(walking_steps):
-        walking_frames.append(walking_sprite_sheet.get_image(x, 128, 128, 1, (255, 255, 255)))
+        walking_frames.append(walking_sprite_sheet.get_image(x, 128, 128, 1))
 
-    animation_cooldown = 500
     frame = 0
     last_animation_update = start_time
 
@@ -425,6 +435,15 @@ def game():
         screen.blit(pygame.image.load("assets/heart.png"), (SCREEN_WIDTH-243, 30))
         screen.blit(pygame.image.load("assets/tree.png"), (SCREEN_WIDTH-243, 70))
         
+        if run_count == 0:
+            screen.blit(pygame.image.load("assets/sprite/laying.png"), (370, 300))
+            pygame.display.update()
+            pygame.time.wait(2000)
+            run_count += 1
+        elif run_count == 1 and not is_walking:
+            screen.blit(pygame.image.load("assets/sprite/standing.png"), (sprite_x, sprite_y))
+            
+
         mouse_pos = pygame.mouse.get_pos() 
 
         if current_time - start_time - 2500*score >= 2500:
@@ -436,6 +455,7 @@ def game():
         # Decrease health when ecology is 0
         if ecology_bar.level <= 0:
             health_bar.level = max(0, health_bar.level - 0.004)  # Decrease health by 1, but don't go below 0
+
 
         # Check for game over condition
         if health_bar.level <= 0 and not game_over:
@@ -490,19 +510,49 @@ def game():
             game_menu()
             return
 
-        # Handle laying to standing animation
-        if sprite_state == 1 and current_time - start_time >= 2000:
-            sprite_state = 2
-            question_timer = current_time  # Reset timer when sprite stands up
+        # Handle walking animation and movement
+        if is_walking:
+            # Update animation frame
+            if current_time - last_animation_update >= animation_cooldown:
+                frame += 1
+                last_animation_update = current_time
+                if frame >= walking_steps:
+                    frame = 0
+                
+                # Update walking direction based on target
+                distance_to_target = abs(sprite_x - target_x)
+                if distance_to_target > walking_speed:  # Only move if more than one frame's distance away
+                    if sprite_x < target_x:
+                        walking_direction = 1
+                        sprite_x += walking_speed
+                    elif sprite_x > target_x:
+                        walking_direction = -1
+                        sprite_x -= walking_speed
+                else:
+                    # Once less than one frame's distance away, snap to exact position and stop walking
+                    sprite_x = target_x
+                    sprite_y = target_y
+                    is_walking = False
+                    walking_direction = 1  # Reset direction for next movement
+                    frame = 0  # Reset animation frame when stopping
+
+            # Draw walking animation
+            current_frame = walking_frames[frame]
+            if walking_direction == -1:
+                # Flip the sprite horizontally when walking left
+                current_frame = pygame.transform.flip(current_frame, True, False)
+            screen.blit(current_frame, (sprite_x, sprite_y))
+            question_timer = current_time
+
 
         # Handle question timing - only start after standing up
-        if sprite_state == 2 and current_time - question_timer >= question_interval and not current_question and questions:
+        if current_time - question_timer >= question_interval and not current_question and questions and not is_walking:
             # Randomly select a question
             current_question = random.choice(questions) 
             question_timer = current_time
 
         # Draw question and options if active
-        if current_question:
+        if current_question and not is_walking:
             # Draw question text
             question_font = pygame.font.Font("assets/ChangaOne-Regular.ttf", 32)
             statement_text = question_font.render(current_question["statement"], True, "black")
@@ -521,12 +571,6 @@ def game():
                 button.changeImage(mouse_pos)
                 button.update(screen)
 
-        # Draw the appropriate sprite
-        if sprite_state == 1:
-            screen.blit(pygame.image.load("assets/sprite/laying.png"), (370, 300))
-        elif sprite_state == 2:
-            screen.blit(pygame.image.load("assets/sprite/standing.png"), (320, 273))
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -537,6 +581,10 @@ def game():
                     # Handle left option
                     health_bar.level += current_question["options"]["left"]["health"]
                     ecology_bar.level += current_question["options"]["left"]["ecology"]
+                    # Set target coordinates for movement
+                    target_x = current_question["options"]["left"]["x"]
+                    target_y = current_question["options"]["left"]["y"]
+                    is_walking = True
                     current_question = None  # Clear current question
                     questions.pop(0)  # Remove the used question
                     question_timer = current_time  # Reset timer for next question
@@ -544,17 +592,13 @@ def game():
                     # Handle right option
                     health_bar.level += current_question["options"]["right"]["health"]
                     ecology_bar.level += current_question["options"]["right"]["ecology"]
+                    # Set target coordinates for movement
+                    target_x = current_question["options"]["right"]["x"]
+                    target_y = current_question["options"]["right"]["y"]
+                    is_walking = True
                     current_question = None  # Clear current question
                     questions.pop(0)  # Remove the used question
                     question_timer = current_time  # Reset timer for next question
-
-        if current_time - last_animation_update >= animation_cooldown:
-            frame += 1
-            last_animation_update = current_time
-            if frame >= walking_steps:
-                frame = 0
-                
-        screen.blit(walking_frames[frame], (370, 300))
 
         pygame.display.update()
 
