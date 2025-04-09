@@ -1,4 +1,4 @@
-1|It's a hot day.|Should you turn on the AC?|Turn it on|10|-20|400|300|Use a fan instead|5|5|200|300
+1|It's a hot day.|Should you turn on the AC?|Turn it on|10|-20|610|213|Use a fan instead|5|5|265|213
 1|Time to brush your teeth.|What do you do?|Leave water running|-5|-10|400|400|Turn off water|5|5|200|400
 1|You're hungry.|What do you eat?|Order takeout|-5|-15|400|200|Cook at home|10|10|200|200
 1|You need to go somewhere nearby.|How do you get there?|Drive|-10|-20|400|100|Walk or bike|15|15|200|100

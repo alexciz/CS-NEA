@@ -11,9 +11,9 @@ screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
 
 login_bg = pygame.image.load('assets/login_bg.png') #login screen bg
 game_bg = pygame.image.load('assets/game_bg.png') #game bg
-title = pygame.image.load('assets/TitleRect.png')
+title = pygame.image.load('assets/TitleRect.png') #title image
 
-#Level Progression Thresholds
+#Level Progression Thresholds - Points required to reach each level
 level_thresholds = [100, 200, 350, 550, 800, 1100, 1450, 1850, 2300, 2800]
 
 clock = pygame.time.Clock()
@@ -31,40 +31,6 @@ def db_connect():        #Database Connection
     mycursor = mydb.cursor()
 
 
-def welcome_screen():
-    frame_rate = 10 #Fade frame rate control
-    font_size = 128 #Font size
-
-    alpha_rate = 5 #Rate of opacity increase
-    sigma_rate = 0 #Special veriable for darius
-    font = pygame.font.Font(None, font_size)
-    screen.fill((30,30,30))
-    orig_surf = font.render('Terra Tales', True, 'chartreuse4')
-    txt_surf = orig_surf.copy() #This surface is used to adjust the alpha of the txt_surf
-    txt_surf_rect = txt_surf.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2))
-    alpha_surf = pygame.Surface(txt_surf.get_size(), pygame.SRCALPHA)
-    alpha = 0  #The current alpha value of the surface
-
-    while alpha <255 :
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return
-            
-        #Reduce alpha each frame, but make sure it doesn't get below 0
-        alpha = min(alpha+alpha_rate, 255)
-        txt_surf = orig_surf.copy()  #Fill alpha_surf with this color to set its alpha value
-        alpha_surf.fill((255, 255, 255, alpha))
-        txt_surf.blit(alpha_surf, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
-        alpha_rate += 1
-        pygame.time.wait(1/frame_rate)
-
-        screen.fill((30,30,30))
-        screen.blit(txt_surf, txt_surf_rect)
-        pygame.display.flip()
-
-    user_auth_menu()
-
-
 def user_auth_menu(registered=False):
     alpha = 0       # 0 = fully transparent, 255 = fully visible
     fade_speed = 0.3          # How fast the message fades out
@@ -72,22 +38,27 @@ def user_auth_menu(registered=False):
     hold_counter = 0
     success_txt = None
 
-    register_button = Button(base_image1=pygame.image.load("assets/buttons/RegisterRectUp.png"), pos=(SCREEN_WIDTH//2, 230), 
+    # Initialize menu buttons
+    register_button = Button(base_image1=pygame.image.load("assets/buttons/RegisterRectUp.png"), 
+                        pos=(SCREEN_WIDTH//2, 230), 
                         hovering_image1=pygame.image.load("assets/buttons/RegisterRectDown.png"))
-        
-    login_button = Button(base_image1=pygame.image.load("assets/buttons/LoginRectUp.png"), pos=(SCREEN_WIDTH//2, 330), 
+    login_button = Button(base_image1=pygame.image.load("assets/buttons/LoginRectUp.png"), 
+                        pos=(SCREEN_WIDTH//2, 330), 
                         hovering_image1=pygame.image.load("assets/buttons/LoginRectDown.png"))
-        
-    quit_button = Button(base_image1=pygame.image.load("assets/buttons/QuitRectUp.png"), pos=(SCREEN_WIDTH//2, 430), 
+    quit_button = Button(base_image1=pygame.image.load("assets/buttons/QuitRectUp.png"), 
+                         pos=(SCREEN_WIDTH//2, 430), 
                         hovering_image1=pygame.image.load("assets/buttons/QuitRectDown.png"))
     
     if registered == True:
-        success_txt = pygame.font.Font("assets/ChangaOne-Regular.ttf", 24).render("Successfully registered!", True, "darkgreen")
+        success_txt = pygame.font.Font("assets/ChangaOne-Regular.ttf",
+                        24).render("Successfully registered!", True, "darkgreen")
 
     while True:
+        # Draw background and title
         screen.blit(login_bg, (0, 0))
         screen.blit(title, title.get_rect(center=(SCREEN_WIDTH//2, 80)))
 
+        # Handle success message fade effect
         if success_txt is not None:
             if hold_counter < hold_duration:
                 # Keep message fully visible during "hold" phase
@@ -103,6 +74,7 @@ def user_auth_menu(registered=False):
             if alpha <= 0:
                 success_txt = None
 
+        # Handle button interactions
         mouse_pos = pygame.mouse.get_pos()
         buttons = [register_button, login_button, quit_button]
 
@@ -133,20 +105,31 @@ def registration_menu():
     hold_counter = 0
     invalid_txt = None
 
-    username_box = InputBox(image = pygame.image.load("assets/InputBox.png"), pos=(SCREEN_WIDTH//2, 210), placeholder='Username', screen_width=SCREEN_WIDTH, screen_height=SCREEN_HEIGHT)
-    password_box = InputBox(image = pygame.image.load("assets/InputBox.png"), pos=(SCREEN_WIDTH//2, 300), placeholder='Password', screen_width=SCREEN_WIDTH, screen_height=SCREEN_HEIGHT, hidden=True)
-    repeat_password_box = InputBox(image = pygame.image.load("assets/InputBox.png"), pos=(SCREEN_WIDTH//2, 390), placeholder='Repeat Password', screen_width=SCREEN_WIDTH, screen_height=SCREEN_HEIGHT, hidden=True)
+    # Initialize input boxes for registration
+    username_box = InputBox(image = pygame.image.load("assets/InputBox.png"),
+                        pos=(SCREEN_WIDTH//2, 210), placeholder='Username',
+                        screen_width=SCREEN_WIDTH, screen_height=SCREEN_HEIGHT)
+    password_box = InputBox(image = pygame.image.load("assets/InputBox.png"),
+                        pos=(SCREEN_WIDTH//2, 300), placeholder='Password',
+                        screen_width=SCREEN_WIDTH, screen_height=SCREEN_HEIGHT, hidden=True)
+    repeat_password_box = InputBox(image = pygame.image.load("assets/InputBox.png"),
+                            pos=(SCREEN_WIDTH//2, 390), placeholder='Repeat Password',
+                            screen_width=SCREEN_WIDTH, screen_height=SCREEN_HEIGHT, hidden=True)
 
-    proceed_button = Button(base_image1=pygame.image.load("assets/buttons/ProceedRectUp.png"), pos=(SCREEN_WIDTH//2, 500), 
+    # Initialize navigation buttons
+    proceed_button = Button(base_image1=pygame.image.load("assets/buttons/ProceedRectUp.png"),
+                         pos=(SCREEN_WIDTH//2, 500), 
                         hovering_image1=pygame.image.load("assets/buttons/ProceedRectDown.png"))
-    home_button = Button(base_image1=pygame.image.load("assets/buttons/HomeRectUp.png"), pos=(70, 70), 
+    home_button = Button(base_image1=pygame.image.load("assets/buttons/HomeRectUp.png"),
+                         pos=(70, 70), 
                         hovering_image1=pygame.image.load("assets/buttons/HomeRectDown.png"))
 
-
     while True:
+        # Draw background and title
         screen.blit(login_bg, (0, 0))
         screen.blit(title, title.get_rect(center=(SCREEN_WIDTH//2, 80)))
 
+        # Handle UI elements
         mouse_pos = pygame.mouse.get_pos()
         input_boxes = [username_box, password_box, repeat_password_box]
         buttons = [home_button, proceed_button]
@@ -158,6 +141,7 @@ def registration_menu():
         for box in input_boxes:
             box.draw(screen)
 
+        # Handle error message fade effect
         if invalid_txt is not None:
             if hold_counter < hold_duration:
                 # Keep message fully visible during "hold" phase
@@ -185,33 +169,40 @@ def registration_menu():
 
                 if proceed_button.checkForInput(mouse_pos):
                     invalid_txt = None
+                    # Check for existing usernames
                     db_connect()
                     mycursor.execute("SELECT username FROM users")  #Selects usernames to prevent duplicates
                     usernames = mycursor.fetchall()
                     mycursor.close()
                     mydb.close()
 
+                    # Validate input fields
                     if len(username_box.return_text()) < 1:
-                            invalid_txt = pygame.font.Font("assets/ChangaOne-Regular.ttf", 24).render("No username entered!", True, "red")
+                            invalid_txt = pygame.font.Font("assets/ChangaOne-Regular.ttf",
+                                        24).render("No username entered!", True, "red")
                             invalid_alpha = 255
                             hold_counter = 0 
 
                     for username in usernames:
                         if username_box.return_text() == username[0]:
-                            invalid_txt = pygame.font.Font("assets/ChangaOne-Regular.ttf", 24).render("Username taken!", True, "red")
+                            invalid_txt = pygame.font.Font("assets/ChangaOne-Regular.ttf",
+                                        24).render("Username taken!", True, "red")
                             invalid_alpha = 255
                             hold_counter = 0 
                     
                     if len(password_box.return_text()) < 8:
-                            invalid_txt = pygame.font.Font("assets/ChangaOne-Regular.ttf", 24).render("Password too short! Minimum 8 characters.", True, "red")
+                            invalid_txt = pygame.font.Font("assets/ChangaOne-Regular.ttf",
+                                        24).render("Password too short! Minimum 8 characters.", True, "red")
                             invalid_alpha = 255
                             hold_counter = 0 
 
                     if password_box.return_text() != repeat_password_box.return_text():
-                            invalid_txt = pygame.font.Font("assets/ChangaOne-Regular.ttf", 24).render("Passwords do not match!", True, "red")
+                            invalid_txt = pygame.font.Font("assets/ChangaOne-Regular.ttf",
+                                        24).render("Passwords do not match!", True, "red")
                             invalid_alpha = 255
                             hold_counter = 0 
 
+                    # If validation passes, create new user
                     if invalid_txt == None:
                         db_connect()
                         sql = "INSERT INTO users (username, password, level, high_score) VALUES (%s, %s, 1, 0)"
@@ -233,18 +224,28 @@ def login_menu():
     invalid_txt = None
     global logged_in_user
 
-    username_box = InputBox(image = pygame.image.load("assets/InputBox.png"), pos=(SCREEN_WIDTH//2, 210), placeholder='Username', screen_width=SCREEN_WIDTH, screen_height=SCREEN_HEIGHT)
-    password_box = InputBox(image = pygame.image.load("assets/InputBox.png"), pos=(SCREEN_WIDTH//2, 300), placeholder='Password', screen_width=SCREEN_WIDTH, screen_height=SCREEN_HEIGHT, hidden=True)
+    # Initialize input boxes for login
+    username_box = InputBox(image = pygame.image.load("assets/InputBox.png"),
+                            pos=(SCREEN_WIDTH//2, 210), placeholder='Username', 
+                            screen_width=SCREEN_WIDTH, screen_height=SCREEN_HEIGHT)
+    password_box = InputBox(image = pygame.image.load("assets/InputBox.png"), 
+                            pos=(SCREEN_WIDTH//2, 300), placeholder='Password', 
+                            screen_width=SCREEN_WIDTH, screen_height=SCREEN_HEIGHT, hidden=True)
 
-    proceed_button = Button(base_image1=pygame.image.load("assets/buttons/ProceedRectUp.png"), pos=(SCREEN_WIDTH//2, 410), 
+    # Initialize navigation buttons
+    proceed_button = Button(base_image1=pygame.image.load("assets/buttons/ProceedRectUp.png"), 
+                            pos=(SCREEN_WIDTH//2, 410), 
                         hovering_image1=pygame.image.load("assets/buttons/ProceedRectDown.png"))
-    home_button = Button(base_image1=pygame.image.load("assets/buttons/HomeRectUp.png"), pos=(70, 70), 
+    home_button = Button(base_image1=pygame.image.load("assets/buttons/HomeRectUp.png"), 
+                         pos=(70, 70), 
                         hovering_image1=pygame.image.load("assets/buttons/HomeRectDown.png"))
     
     while True:
+        # Draw background and title
         screen.blit(login_bg, (0, 0))
         screen.blit(title, title.get_rect(center=(SCREEN_WIDTH//2, 80)))
 
+        # Handle UI elements
         mouse_pos = pygame.mouse.get_pos()
         input_boxes = [username_box, password_box]
         buttons = [home_button, proceed_button]
@@ -256,6 +257,7 @@ def login_menu():
         for box in input_boxes:
             box.draw(screen)
 
+        # Handle error message fade effect
         if invalid_txt is not None:
             if hold_counter < hold_duration:
                 # Keep message fully visible during "hold" phase
@@ -283,27 +285,30 @@ def login_menu():
 
                 if proceed_button.checkForInput(mouse_pos):
                     invalid_txt = None
+                    # Validate login credentials
                     db_connect()
-                    mycursor.execute("SELECT username, password FROM users")  #Selects all user login data for validation
+                    #Selects all user login data for validation
+                    mycursor.execute("SELECT username, password FROM users")  
                     user_data = mycursor.fetchall()
                     mycursor.close()
                     mydb.close()
 
                     for user in user_data:
-                        if username_box.return_text() == user[0] or password_box.return_text() == user[1]:
+                        if username_box.return_text() == user[0]\
+                              or password_box.return_text() == user[1]:
                             logged_in_user = username_box.return_text()
                             game_menu()
                             break
                         else:
-                            invalid_txt = pygame.font.Font("assets/ChangaOne-Regular.ttf", 24).render("Username or password incorrect!", True, "red")
+                            invalid_txt = pygame.font.Font("assets/ChangaOne-Regular.ttf", 
+                                        24).render("Username or password incorrect!", True, "red")
                             invalid_alpha = 255
                             hold_counter = 0 
         pygame.display.update()
 
 
 def game_menu():
-    global sound
-    sound = True
+    # Fetch player stats from database
     db_connect()
     mycursor.execute ("SELECT level FROM users WHERE username = %s", (logged_in_user,))
     level = mycursor.fetchone()
@@ -312,20 +317,31 @@ def game_menu():
     mycursor.close()
     mydb.close()
 
-    play_button = Button(base_image1=pygame.image.load("assets/buttons/PlayRectUp.png"), pos=(SCREEN_WIDTH//2, 250), 
+    # Initialize menu buttons
+    play_button = Button(base_image1=pygame.image.load("assets/buttons/PlayRectUp.png"), 
+                         pos=(SCREEN_WIDTH//2, 250), 
                         hovering_image1=pygame.image.load("assets/buttons/PlayRectDown.png"))
-    quit_button = Button(base_image1=pygame.image.load("assets/buttons/QuitRectUp.png"), pos=(SCREEN_WIDTH//2, 350), 
+    quit_button = Button(base_image1=pygame.image.load("assets/buttons/QuitRectUp.png"), 
+                         pos=(SCREEN_WIDTH//2, 350), 
                         hovering_image1=pygame.image.load("assets/buttons/QuitRectDown.png"))
-    sound_button = Button(base_image1=pygame.image.load("assets/buttons/SoundOnRectUp.png"), pos=(SCREEN_WIDTH//2, 450), 
-                        hovering_image1=pygame.image.load("assets/buttons/SoundOnRectDown.png"), toggle=True,
+    sound_button = Button(base_image1=pygame.image.load("assets/buttons/SoundOnRectUp.png"), 
+                          pos=(SCREEN_WIDTH//2, 450), 
+                        hovering_image1=pygame.image.load("assets/buttons/SoundOnRectDown.png"), 
+                        toggle=True,
                         base_image2=pygame.image.load("assets/buttons/SoundOffRectUp.png"),
                         hovering_image2=pygame.image.load("assets/buttons/SoundOffRectDown.png"))
 
     while True:
+        # Draw background and player stats
         screen.blit(login_bg, (0, 0))
-        screen.blit(pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(f'Level: {level[0]}', True, pygame.Color('white')), (SCREEN_WIDTH-140,27))
-        screen.blit(pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(f'High Score: {high_score[0]}', True, pygame.Color('white')), (30,27))
+        screen.blit(pygame.font.Font("assets/ChangaOne-Regular.ttf", 
+                                     28).render(f'Level: {level[0]}', 
+                                    True, pygame.Color('white')), (SCREEN_WIDTH-140,27))
+        screen.blit(pygame.font.Font("assets/ChangaOne-Regular.ttf", 
+                                     28).render(f'High Score: {high_score[0]}', 
+                                    True, pygame.Color('white')), (30,27))
 
+        # Handle button interactions
         mouse_pos = pygame.mouse.get_pos() 
         buttons = [play_button, quit_button, sound_button]
 
@@ -340,23 +356,18 @@ def game_menu():
             
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if play_button.checkForInput(mouse_pos):
-                    game(logged_in_user)
+                    sound = sound_button.get_state()
+                    game()
                 
                 if quit_button.checkForInput(mouse_pos):
                     pygame.quit()
                     sys.exit()
                 
-                if sound_button.checkForInput(mouse_pos):
-                    if sound:
-                        sound = False
-                    else:
-                        sound = True
 
         pygame.display.update()
 
 
 def game():
-    logged_in_user = "test"
     start_time = pygame.time.get_ticks() #Fetches clock time when game starts for score calculations
     score = 0
     run_count = 0 #Holds the number of times the game loop has run for the first two runs
@@ -364,8 +375,8 @@ def game():
     question_timer = 0
     question_interval = 5000  # Show new question every 5 seconds
     game_over = False
-    sprite_x = 320  # Default sprite position
-    sprite_y = 273  # Default sprite position
+    sprite_x = 265  # Default sprite position
+    sprite_y = 213  # Default sprite position
     is_walking = False
     target_x = sprite_x
     target_y = sprite_y
@@ -373,19 +384,19 @@ def game():
     walking_direction = 1  # 1 for right, -1 for left
     animation_cooldown = 100  # Animation frame timing
 
-    # Get player's level
+    # Get player's level from database
     db_connect()
     mycursor.execute("SELECT level FROM users WHERE username = %s", (logged_in_user,))
-    player_level = mycursor.fetchone()[0]
+    player_level = int(mycursor.fetchone()[0])
     mycursor.close()
     mydb.close()
 
-    # Load questions for current level
+    # Load questions for current level from questions.txt
     questions = []
     with open('questions.txt', 'r') as file:
         for line in file:
             level, statement, question, left_text, left_health, left_ecology, left_x, left_y, right_text, right_health, right_ecology, right_x, right_y = line.strip().split('|')
-            if int(level) == int(player_level):
+            if int(level) == player_level:
                 questions.append({
                     "statement": statement,
                     "question": question,
@@ -407,6 +418,7 @@ def game():
                     }
                 })
 
+    # Initialize UI elements
     health_bar = IndicatorBar(SCREEN_WIDTH-208, 30, 200, 25, 100)
     ecology_bar = IndicatorBar(SCREEN_WIDTH-208, 70, 200, 25, 100)
 
@@ -416,46 +428,65 @@ def game():
                         hovering_image1=pygame.image.load("assets/buttons/RightRectDown.png"))
     buttons = [left_button, right_button]
 
+    # Load and prepare walking animation
     walking_sprite_sheet_image = pygame.image.load("assets/sprite/walk.png").convert_alpha()
     walking_sprite_sheet = SpriteSheet(walking_sprite_sheet_image)
     
     walking_frames = []
     walking_steps = 10
 
+
     for x in range(walking_steps):
         walking_frames.append(walking_sprite_sheet.get_image(x, 128, 128, 1))
+    
+    idle_sprite_sheet_image = pygame.image.load("assets/sprite/idle.png").convert_alpha()
+    idle_sprite_sheet = SpriteSheet(idle_sprite_sheet_image)
+
+    idle_frames = []
+    idle_steps = 6
+
+    for x in range(idle_steps):
+        idle_frames.append(idle_sprite_sheet.get_image(x, 128, 128, 1))
 
     frame = 0
     last_animation_update = start_time
 
     while True:
         current_time = pygame.time.get_ticks()
+        # Draw game background and UI
         screen.blit(game_bg, (0, 0))
         screen.blit(pygame.font.Font("assets/ChangaOne-Regular.ttf", 28).render(f'Score: {score}', True, pygame.Color('white')), (30,27))
         screen.blit(pygame.image.load("assets/heart.png"), (SCREEN_WIDTH-243, 30))
         screen.blit(pygame.image.load("assets/tree.png"), (SCREEN_WIDTH-243, 70))
         
+        health_bar.draw(screen)
+        ecology_bar.draw(screen)
+
+        # Handle initial animation sequence
         if run_count == 0:
             screen.blit(pygame.image.load("assets/sprite/laying.png"), (370, 300))
             pygame.display.update()
             pygame.time.wait(2000)
             run_count += 1
         elif run_count == 1 and not is_walking:
-            screen.blit(pygame.image.load("assets/sprite/standing.png"), (sprite_x, sprite_y))
-            
+            current_frame = idle_frames[frame]
+            screen.blit(current_frame, (sprite_x, sprite_y))
+            if current_time - last_animation_update >= animation_cooldown:
+                frame += 1
+                if frame >= idle_steps:
+                    frame = 0
+                last_animation_update = current_time
+    
 
         mouse_pos = pygame.mouse.get_pos() 
 
+        # Update score based on time
         if current_time - start_time - 2500*score >= 2500:
             score += 1
-    
-        health_bar.draw(screen)
-        ecology_bar.draw(screen)
 
-        # Decrease health when ecology is 0
+        # Handle health reduction when ecology is depleted
         if ecology_bar.level <= 0:
             health_bar.level = max(0, health_bar.level - 0.004)  # Decrease health by 1, but don't go below 0
-
 
         # Check for game over condition
         if health_bar.level <= 0 and not game_over:
@@ -496,7 +527,7 @@ def game():
                 # Update level
                 player_level += 1
 
-            #Update database
+            #Update database with new stats
             mycursor.execute("UPDATE users SET level = %s, high_score = %s, total_score = %s WHERE username = %s", (player_level, high_score, total_score, logged_in_user))
             mydb.commit()
             mycursor.close()
@@ -544,7 +575,6 @@ def game():
             screen.blit(current_frame, (sprite_x, sprite_y))
             question_timer = current_time
 
-
         # Handle question timing - only start after standing up
         if current_time - question_timer >= question_interval and not current_question and questions and not is_walking:
             # Randomly select a question
@@ -585,8 +615,8 @@ def game():
                     target_x = current_question["options"]["left"]["x"]
                     target_y = current_question["options"]["left"]["y"]
                     is_walking = True
+                    questions.remove(current_question)# Remove the used question
                     current_question = None  # Clear current question
-                    questions.pop(0)  # Remove the used question
                     question_timer = current_time  # Reset timer for next question
                 elif right_button.checkForInput(mouse_pos):
                     # Handle right option
@@ -596,11 +626,44 @@ def game():
                     target_x = current_question["options"]["right"]["x"]
                     target_y = current_question["options"]["right"]["y"]
                     is_walking = True
+                    questions.remove(current_question)# Remove the used question
                     current_question = None  # Clear current question
-                    questions.pop(0)  # Remove the used question
                     question_timer = current_time  # Reset timer for next question
 
         pygame.display.update()
 
 
-game()
+def welcome_screen():
+    frame_rate = 10 #Fade frame rate control
+    font_size = 128 #Font size
+
+    alpha_rate = 5 #Rate of opacity increase
+    sigma_rate = 0 #Special veriable for darius
+    font = pygame.font.Font(None, font_size)
+    screen.fill((30,30,30))
+    orig_surf = font.render('Terra Tales', True, 'chartreuse4')
+    txt_surf = orig_surf.copy() #This surface is used to adjust the alpha of the txt_surf
+    txt_surf_rect = txt_surf.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2))
+    alpha_surf = pygame.Surface(txt_surf.get_size(), pygame.SRCALPHA)
+    alpha = 0  #The current alpha value of the surface
+
+    while alpha <255 :
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return
+            
+        #Reduce alpha each frame, but make sure it doesn't get below 0
+        alpha = min(alpha+alpha_rate, 255)
+        txt_surf = orig_surf.copy()  #Fill alpha_surf with this color to set its alpha value
+        alpha_surf.fill((255, 255, 255, alpha))
+        txt_surf.blit(alpha_surf, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+        alpha_rate += 1
+        pygame.time.wait(1/frame_rate)
+
+        screen.fill((30,30,30))
+        screen.blit(txt_surf, txt_surf_rect)
+        pygame.display.flip()
+
+    user_auth_menu()
+
+user_auth_menu()
